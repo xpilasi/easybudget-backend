@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyBudget - Compartir Lista</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .stores {
+            display: flex;
+            gap: 15px;
+            flex-direction: column;
+            margin-top: 30px;
+        }
+
+        .store-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #000;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .store-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .store-button.ios {
+            background: #000;
+        }
+
+        .store-button.android {
+            background: #3DDC84;
+        }
+
+        .info {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+
+        .info-text {
+            font-size: 14px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🛒</div>
+        <h1>EasyBudget</h1>
+        <p>
+            Han compartido una lista de compras contigo.
+            Para verla, descarga la app EasyBudget.
+        </p>
+
+        <div class="stores">
+            <a href="#" class="store-button ios">
+                📱 Descargar en App Store
+            </a>
+            <a href="#" class="store-button android">
+                🤖 Descargar en Google Play
+            </a>
+        </div>
+
+        <div class="info">
+            <p class="info-text">
+                Una vez instalada la app, vuelve a hacer click en el enlace
+                que te compartieron y la lista se abrirá automáticamente.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Detectar si la app está instalada e intentar abrir
+        const urlParams = new URLSearchParams(window.location.search);
+        const shareId = window.location.pathname.split('/share/')[1];
+
+        if (shareId) {
+            // Intentar abrir la app (funciona si está instalada)
+            window.location.href = `easybudget://share/${shareId}`;
+
+            // Si después de 2 segundos sigue aquí, la app no está instalada
+            setTimeout(() => {
+                // Mostrar los botones de descarga
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

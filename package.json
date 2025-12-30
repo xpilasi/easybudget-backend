@@ -1,0 +1,8 @@
+{
+  "name": "easybudget-backend",
+  "version": "1.0.0",
+  "description": "Backend para compartir listas de EasyBudget",
+  "dependencies": {
+    "@netlify/blobs": "^7.0.0"
+  }
+}
