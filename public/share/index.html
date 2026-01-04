@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Compartida - EasyBudget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header .emoji {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .list-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .list-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .list-category {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .list-stats {
+            display: flex;
+            gap: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .products {
+            margin-bottom: 20px;
+        }
+
+        .product {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product:last-child {
+            border-bottom: none;
+        }
+
+        .product-name {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .product-price {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .total {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: #25D366;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #20bd5a;
+        }
+
+        .btn-secondary {
+            background: #667eea;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #5568d3;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .error-emoji {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="emoji">🛒</div>
+            <h1>Lista Compartida</h1>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Cargando lista...</p>
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="list-info">
+                <div class="list-name" id="listName"></div>
+                <div class="list-category" id="listCategory"></div>
+                <div class="list-stats">
+                    <span id="productCount"></span>
+                    <span>•</span>
+                    <span id="itemCount"></span>
+                </div>
+            </div>
+
+            <div class="products" id="products"></div>
+
+            <div class="total">
+                <span>TOTAL</span>
+                <span id="total"></span>
+            </div>
+
+            <button class="btn" id="openAppBtn">Abrir en EasyBudget</button>
+        </div>
+
+        <div id="error" style="display: none;" class="error">
+            <div class="error-emoji">😕</div>
+            <p class="error-message" id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Configuración de Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            databaseURL: "https://easybudget-b4109-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Obtener ID de la URL
+        const pathParts = window.location.pathname.split('/');
+        const shareId = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+
+        console.log('Share ID:', shareId);
+
+        if (!shareId || shareId === 'share') {
+            showError('URL inválida');
+        } else {
+            loadList(shareId);
+        }
+
+        async function loadList(id) {
+            try {
+                const listRef = ref(database, `shared_lists/${id}`);
+                const snapshot = await get(listRef);
+
+                if (!snapshot.exists()) {
+                    showError('Lista no encontrada o expirada');
+                    return;
+                }
+
+                const data = snapshot.val();
+
+                // Verificar expiración
+                if (data.expiresAt && Date.now() > data.expiresAt) {
+                    showError('Esta lista ha expirado');
+                    return;
+                }
+
+                displayList(data);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error al cargar la lista');
+            }
+        }
+
+        function displayList(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+            document.getElementById('listName').textContent = data.name;
+            document.getElementById('listCategory').textContent = `📁 ${data.categoryName}`;
+
+            const productCount = data.products ? data.products.length : 0;
+            const itemCount = data.products ? data.products.reduce((sum, p) => sum + p.quantity, 0) : 0;
+
+            document.getElementById('productCount').textContent = `${productCount} productos`;
+            document.getElementById('itemCount').textContent = `${itemCount} items`;
+
+            // Productos
+            const productsContainer = document.getElementById('products');
+            productsContainer.innerHTML = '';
+
+            if (data.products && data.products.length > 0) {
+                data.products.forEach(product => {
+                    const productDiv = document.createElement('div');
+                    productDiv.className = 'product';
+                    productDiv.innerHTML = `
+                        <div class="product-name">
+                            ${product.name} <span style="color: #999;">x${product.quantity}</span>
+                        </div>
+                        <div class="product-price">${data.currency}${(product.price * product.quantity).toFixed(2)}</div>
+                    `;
+                    productsContainer.appendChild(productDiv);
+                });
+            }
+
+            // Total
+            const total = data.products ? data.products.reduce((sum, p) => sum + (p.price * p.quantity), 0) : 0;
+            document.getElementById('total').textContent = `${data.currency}${total.toFixed(2)}`;
+
+            // Botón para abrir app
+            const openAppBtn = document.getElementById('openAppBtn');
+            openAppBtn.onclick = () => {
+                // Intentar abrir con custom scheme (fallback)
+                const deepLink = `easybudget://share/${shareId}`;
+                window.location.href = deepLink;
+
+                // Si no funciona en 2 segundos, mostrar mensaje
+                setTimeout(() => {
+                    alert('Por favor, descarga EasyBudget desde Google Play Store');
+                }, 2000);
+            };
+
+            // Intentar abrir automáticamente la app (solo en móvil)
+            if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                setTimeout(() => {
+                    const deepLink = `easybudget://share/${shareId}`;
+                    window.location.href = deepLink;
+                }, 500);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+        }
+    </script>
+</body>
+</html>
